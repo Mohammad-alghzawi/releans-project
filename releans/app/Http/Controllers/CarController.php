@@ -19,6 +19,15 @@ class CarController extends Controller
         // return response()->json($cars);
     }
 
+    public function getCars()
+    {
+        $cars = car::all();
+        // return view('pages.index', compact('cars'));
+        return response()->json($cars);
+    }
+
+
+
     /**
      * Show the form for creating a new resource.
      *
@@ -90,8 +99,12 @@ class CarController extends Controller
         $carShow = car::find($id);
         return view('pages.show', compact("carShow"));
         // return response()->json($carShow);
-
-
+    }
+    public function getCar($id)
+    {
+        $car = car::find($id);
+        // return view('pages.show', compact("carShow"));
+        return response()->json($car);
     }
 
     /**

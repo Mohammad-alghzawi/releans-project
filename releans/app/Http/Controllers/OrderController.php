@@ -49,6 +49,33 @@ class OrderController extends Controller
         return redirect()->route('buyingNotification');
     }
 
+    public function getReportData(){
+        $numberOfOrders = Order::count();
+        $numberOfTotalCars = Car::count();
+        $numberOfCarsInStock = Car::where('stock', '>=', 1)->count();
+        $mostRepeatedCarId = Order::select('car_id')
+        ->groupBy('car_id')
+        ->orderByRaw('COUNT(*) DESC')
+        ->limit(1)
+        ->pluck('car_id')
+        ->first();
+
+   
+    $mostPopularCar = Car::find($mostRepeatedCarId);
+
+    $data = [
+        'numberOfOrders' => $numberOfOrders,
+        'numberOfTotalCars' => $numberOfTotalCars,
+        'numberOfCarsInStock' => $numberOfCarsInStock,
+        'mostPopularCar' => $mostPopularCar->type,
+    ];
+
+    
+    return response()->json($data);
+}
+  
+    
+
     /**
      * Display the specified resource.
      *

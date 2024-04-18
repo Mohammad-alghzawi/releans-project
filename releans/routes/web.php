@@ -6,6 +6,7 @@ use App\Http\Controllers\CarController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -30,10 +31,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-Route::resource('/car',CarController::class);
-Route::post('/order/store/{id}', [OrderController::class, 'store'])->name('buyCar');
-Route::get('/home', [HomeController::class, 'index'])->name('homePage')->middleware('auth', 'verified');
-Route::view('/buying-notification', 'pages.buyingNotification')->name('buyingNotification');
 
+Route::group(['middleware' => ['auth', 'admin']], function () {
+    Route::resource('/car',CarController::class);
+});
+Route::group(['middleware' => ['auth','verified']], function () {
+    Route::post('/order/store/{id}', [OrderController::class, 'store'])->name('buyCar');
+    Route::get('/most', [OrderController::class, 'getReportData']);
+    Route::get('/home', [HomeController::class, 'index'])->name('homePage');
+    Route::view('/buying-notification', 'pages.buyingNotification')->name('buyingNotification');
+});
 
 require __DIR__.'/auth.php';
