@@ -20,7 +20,7 @@ use App\Http\Controllers\OrderController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name("home");
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -33,13 +33,14 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::group(['middleware' => ['auth', 'admin']], function () {
-    Route::resource('/car',CarController::class);
+    Route::resource('/car', CarController::class);
+    Route::get('/generate-pdf', [OrderController::class, 'getReportData'])->name('getReportData');
 });
-Route::group(['middleware' => ['auth','verified']], function () {
+Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('/order/store/{id}', [OrderController::class, 'store'])->name('buyCar');
     Route::get('/most', [OrderController::class, 'getReportData']);
     Route::get('/home', [HomeController::class, 'index'])->name('homePage');
     Route::view('/buying-notification', 'pages.buyingNotification')->name('buyingNotification');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

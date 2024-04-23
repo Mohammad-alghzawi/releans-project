@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Car;
+use Barryvdh\DomPDF\PDF;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -49,32 +52,52 @@ class OrderController extends Controller
         return redirect()->route('buyingNotification');
     }
 
-    public function getReportData(){
+    public function getReportData()
+    {
         $numberOfOrders = Order::count();
         $numberOfTotalCars = Car::count();
         $numberOfCarsInStock = Car::where('stock', '>=', 1)->count();
         $mostRepeatedCarId = Order::select('car_id')
-        ->groupBy('car_id')
-        ->orderByRaw('COUNT(*) DESC')
-        ->limit(1)
-        ->pluck('car_id')
-        ->first();
+            ->groupBy('car_id')
+            ->orderByRaw('COUNT(*) DESC')
+            ->limit(1)
+            ->pluck('car_id')
+            ->first();
 
-   
-    $mostPopularCar = Car::find($mostRepeatedCarId);
+        $mostPopularCar = Car::find($mostRepeatedCarId);
 
-    $data = [
-        'numberOfOrders' => $numberOfOrders,
-        'numberOfTotalCars' => $numberOfTotalCars,
-        'numberOfCarsInStock' => $numberOfCarsInStock,
-        'mostPopularCar' => $mostPopularCar->type,
-    ];
+        // Generate HTML content for the PDF
+        $html = '<h1>Sales Report</h1>';
+        $html .= '<table border="1" cellpadding="5">';
+        $html .= '<tr><th>Attribute</th><th>Value</th></tr>';
+        $html .= '<tr><td>Number of Orders</td><td>' . $numberOfOrders . '</td></tr>';
+        $html .= '<tr><td>Number of Total Cars</td><td>' . $numberOfTotalCars . '</td></tr>';
+        $html .= '<tr><td>Number of Cars in Stock</td><td>' . $numberOfCarsInStock . '</td></tr>';
+        $html .= '<tr><td>Most Popular Car</td><td>' . $mostPopularCar->type . '</td></tr>';
+        $html .= '</table>';
 
-    
-    return response()->json($data);
-}
-  
-    
+        // Create a new Dompdf instance
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $dompdf = new Dompdf($options);
+
+        // Load HTML content into Dompdf
+        $dompdf->loadHtml($html);
+
+        // Set paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+
+        // Render PDF (optional: you can also pass a filename)
+        $dompdf->render();
+
+        // Output the generated PDF
+        $pdfContent = $dompdf->output();
+
+        // Download the PDF
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment;filename="sales_report.pdf"');
+    }
 
     /**
      * Display the specified resource.
